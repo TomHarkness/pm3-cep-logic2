@@ -1,13 +1,17 @@
 {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "apiVersion": "1.0.0",
     "author": "Tom Harkness",
     "name": "PM3 CEP Frames",
-    "description": "Decodes Proxmark3 NG command/response frames (PM5 <-> Flipper Zero CEP link) on top of the SPI analyzer.",
+    "description": "Decodes Proxmark3 NG command/response frames on the SPI analyzer and the UART handshake on the Async Serial analyzer (PM5 <-> Flipper Zero CEP link).",
     "extensions": {
         "PM3 CEP Frames": {
             "type": "HighLevelAnalyzer",
             "entryPoint": "pm3_hla.Pm3Hla"
+        },
+        "PM5 CEP Handshake": {
+            "type": "HighLevelAnalyzer",
+            "entryPoint": "pm3_handshake_hla.HandshakeHla"
         }
     }
 }

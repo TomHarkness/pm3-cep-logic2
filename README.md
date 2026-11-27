@@ -6,8 +6,10 @@ Zero over CEP (the PM5's extended USB-C port).
 
 - **PM3 CEP Frames**: a Logic 2 High Level Analyzer that labels each SPI
   burst with the Proxmark3 command/response name, status, and length.
+- **PM5 CEP Handshake**: a second High Level Analyzer that labels the
+  Flipper's UART handshake (`STX` + `iamf0rupm5`) and flags bad attempts.
 - **PM5 - CEP - SPI**: a Logic 2 preset with the channels named, the SPI
-  analyzer configured, and the data table laid out for the decoder.
+  analyzer configured, and the data table laid out for the decoders.
 - **Capture scripts**: scripted captures, offline decoding, and bus timing.
 - **Flipper helpers**: one-shot CLI commands and `expect` scripts for
   driving the Flipper side during a capture.
@@ -20,8 +22,9 @@ CEP.
 | Path | What it is |
 | --- | --- |
 | `extension.json`, `pm3_hla.py`, `pm3_frames.py` | The PM3 CEP Frames Logic 2 extension |
+| `pm3_handshake_hla.py` | The PM5 CEP Handshake decoder (same extension) |
 | `logic2-preset/` | The PM5 - CEP - SPI preset |
-| `capture-tools/capture.py` | Timed 8-channel/24 MHz capture via the Logic 2 automation API, with SPI and HLA attached, exported to CSV |
+| `capture-tools/capture.py` | Timed 8-channel/24 MHz capture via the Logic 2 automation API, with SPI, Async Serial and both decoders attached, exported to CSV |
 | `capture-tools/spi_decode.py` | Offline decode of an exported `digital.csv`; flags malformed CEP frames (sync, length prefix, `PM3a` magic) |
 | `capture-tools/find_burst.py` | Groups transitions into SPI transactions and reports the idle gap between them (e.g. the Flipper's poll interval) |
 | `flipper-cli/flipper_cli.py` | Sends a single Flipper CLI command over serial, no interactive session needed |
@@ -41,9 +44,11 @@ analyzer on in parallel. Nothing needs disconnecting.
 | CH1 | MISO (PM5 -> Flipper) | A3 / B3 |
 | CH2 | SCK | A10 / B10 |
 | CH3 | CS, active low | A11 / B11 |
+| CH4 | UART handshake (Flipper -> PM5) | A8 / B8 (SBU1) |
 | GND | GND | any GND |
 
-Sample at 24 MHz; the CEP clock is about 2 MHz.
+Sample at 24 MHz; the CEP clock is about 2 MHz. CH4 is only needed to
+see the handshake, which happens once each time the Flipper app starts.
 
 Don't use an inline USB-C power meter (e.g. FNIRSI FNB48) in place of
 the breakout. Meters have an active PD chip on CC and don't route SBU, so
@@ -56,9 +61,11 @@ the CEP link won't come up through them.
 2. **Import the preset.** Device settings -> **Presets** -> **Import** ->
    `logic2-preset/PM5 - CEP - SPI.logic2Preset`.
 3. **Add the decoder.** Add the **PM3 CEP Frames** analyzer with **SPI**
-   as its input, then save the preset again so it loads every time. The
-   preset can't include the decoder itself, because Logic 2 stores
-   extensions by local file path.
+   as its input. For the handshake, add an **Async Serial** analyzer on
+   CH4 (2400 bit/s, other settings at their defaults: 8N1, LSB first, non
+   inverted) and a **PM5 CEP Handshake** analyzer with it as input. Save
+   the preset again so it loads every time. The preset can't include the
+   decoders itself, because Logic 2 stores extensions by local file path.
 4. **Optional.** Right-click the SPI analyzer and untick "Show in data
    table", so the table lists only decoded frames.
 
@@ -70,6 +77,10 @@ transfer, CPOL 0, CPHA 0 (mode 0), Enable active low.
 - `CMD <name> len=<n>`: command on MOSI (`PM3a` preamble).
 - `RESP <name> st=<status> len=<n>`: response on MISO (`PM3b` preamble).
   `st` is the PM3 return code; 0 is `PM3_SUCCESS`.
+- `HANDSHAKE iamf0rupm5`: a complete UART handshake on CH4.
+- `BAD HANDSHAKE '<bytes>' (<reason>)`: an attempt that went wrong after
+  `STX`: `mismatch`, `framing error`, or `restarted` (a new `STX` arrived
+  first). Bytes outside a handshake show as hex.
 
 Frames are found by searching for the preamble, so the CEP sync bytes
 and length prefix in front of a frame are skipped. Unknown command IDs

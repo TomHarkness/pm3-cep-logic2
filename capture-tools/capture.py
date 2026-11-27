@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Timed 8-channel/24MHz Logic 2 capture of the CEP SPI bus, with the SPI
-analyzer and the PM3 CEP Frames HLA attached, exported as digital.csv into
+Timed 8-channel/24MHz Logic 2 capture of the CEP link, with the SPI and
+Async Serial analyzers and both HLAs attached, exported as digital.csv into
 ./la_captures/<timestamp>_<label>/ (override with LA_CAPTURE_DIR).
 
 Usage:
@@ -73,6 +73,19 @@ def main():
         "PM3 CEP Frames",
         input_analyzer=spi,
         label="PM3 CEP Frames",
+    )
+    # Other settings default to 8N1, LSB first, non-inverted.
+    uart = capture.add_analyzer(
+        "Async Serial",
+        label="UART",
+        settings={"Input Channel": 4, "Bit Rate (Bits/s)": 2400},
+    )
+    time.sleep(1.0)
+    capture.add_high_level_analyzer(
+        os.path.abspath(HLA_DIR),
+        "PM5 CEP Handshake",
+        input_analyzer=uart,
+        label="PM5 CEP Handshake",
     )
     capture.export_raw_data_csv(outdir, digital_channels=[0, 1, 2, 3, 4, 5, 6, 7])
     print(f"EXPORTED TO {outdir}")
