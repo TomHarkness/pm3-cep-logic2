@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+set timeout 25
+spawn ./fbt cli
+expect ">: " {} timeout { puts "FZ CLI banner never came up - aborting"; exit 1 }
+after 400
+send "date\r"
+expect ">: " {} timeout { puts "FZ unresponsive to date - aborting, do NOT trust this session"; exit 1 }
+after 400
+send "loader close\r"
+expect ">: " {} timeout { puts "loader close did not return - aborting"; exit 1 }
+after 400
+send "loader open /ext/apps/rfid/fmps_cxt.fap\r"
+expect ">: " {} timeout { puts "loader open did not return - aborting"; exit 1 }
+puts "RELAUNCH_DONE"
+after 500
+exit 0

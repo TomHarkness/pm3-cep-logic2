@@ -1,0 +1,13 @@
+{
+    "version": "0.1.0",
+    "apiVersion": "1.0.0",
+    "author": "Tom Harkness",
+    "name": "PM3 CEP Frames",
+    "description": "Decodes Proxmark3 NG command/response frames (PM5 <-> Flipper Zero CEP link) on top of the SPI analyzer.",
+    "extensions": {
+        "PM3 CEP Frames": {
+            "type": "HighLevelAnalyzer",
+            "entryPoint": "pm3_hla.Pm3Hla"
+        }
+    }
+}

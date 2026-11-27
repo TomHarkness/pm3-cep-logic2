@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+# Run from the Flipper firmware checkout: expect /path/to/fbt_cli_logdebug.exp
+# Confirms the CLI really answers (date) before entering log debug.
+set timeout 25
+spawn ./fbt cli
+expect ">: " {} timeout { puts "FZ CLI banner never came up - aborting"; exit 1 }
+after 400
+send "date\r"
+expect ">: " {} timeout { puts "FZ unresponsive to date - aborting, do NOT trust this session"; exit 1 }
+after 400
+send "log debug\r"
+interact

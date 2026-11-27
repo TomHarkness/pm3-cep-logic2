@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+la_captures/
+.DS_Store
